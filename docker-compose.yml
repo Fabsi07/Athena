@@ -1,0 +1,16 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.15.0-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-athena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-athena}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./backend/data/storage/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+volumes:
+  timescale_data:

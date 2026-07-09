@@ -20,11 +20,11 @@ Treat "autonomous multi-agent trading AI" as the long-term vision, not the first
 
 Prefer a lean research platform before complex AI automation and before heavy DevOps infrastructure.
 
-The target system architecture is modeled as: **WebSocket** $\rightarrow$ **Kafka / RabbitMQ** $\rightarrow$ **Collector** $\rightarrow$ **TimescaleDB** $\rightarrow$ **Feature Store** $\rightarrow$ **Research Layer**[cite: 3]. 
+The target system architecture is modeled as: **WebSocket** $\rightarrow$ **Kafka / RabbitMQ** $\rightarrow$ **Collector** $\rightarrow$ **TimescaleDB** $\rightarrow$ **Feature Store** $\rightarrow$ **Research Layer**. 
 
-However, for Version 1, do not introduce message brokers (Kafka/RabbitMQ)[cite: 3]. Stick to direct ingestion into a local database (TimescaleDB) and build the following pipeline priority:
+However, for Version 1, do not introduce message brokers (Kafka/RabbitMQ). Stick to direct ingestion into a local database (TimescaleDB) and build the following pipeline priority:
 
-1. Data collection, data quality, and local storage (Save everything from Day 1)[cite: 3].
+1. Data collection, data quality, and local storage (Save everything from Day 1).
 2. The Iterative Research Loop: Backtesting engine ↔ Feature engineering ↔ Strategy research.
 3. Independent Risk & Metrics calculation.
 4. Experiment tracking and reproducibility.
@@ -47,6 +47,7 @@ When working in this repository:
 - Never let an AI-generated signal trade real funds directly.
 - Assume financial backtests are fragile until proven otherwise.
 - Watch aggressively for lookahead bias, survivorship bias, data snooping, and overfitting.
+- Default fill assumptions must be conservative. Market orders cross the spread and include fees/slippage. Limit-order fill-at-touch is optimistic and may only be used when explicitly labeled and justified.
 
 ## Architecture Principles
 
@@ -65,13 +66,13 @@ Do not couple these layers casually. A backtest should not depend on a UI. A str
 
 ## Data Rules & The Adapter Mandate
 
-Market data is the foundation of the system. We prioritize APIs that are free and easily interchangeable[cite: 3]. 
+Market data is the foundation of the system. We prioritize APIs that are free and easily interchangeable. 
 
-**Direct API calls within strategy or research code are strictly forbidden.** All external data must pass through a strict `Exchange` abstraction layer[cite: 3].
+**Direct API calls within strategy or research code are strictly forbidden.** All external data must pass through a strict `Exchange` abstraction layer.
 
-- The base `Exchange` class must define explicit contracts such as `get_candles()`, `get_orderbook()`, `get_funding()`, and `get_open_interest()`[cite: 3].
-- Exchange-specific implementations (e.g., `BinanceExchange`, `BybitExchange`, `CoinbaseExchange`) must inherit from this class[cite: 3].
-- If an exchange changes its API, only that specific adapter file should change, protecting the rest of the project codebase[cite: 3].
+- The base `Exchange` class must define explicit contracts such as `get_candles()`, `get_orderbook()`, `get_funding()`, and `get_open_interest()`.
+- Exchange-specific implementations (e.g., `BinanceExchange`, `BybitExchange`, `CoinbaseExchange`) must inherit from this class.
+- If an exchange changes its API, only that specific adapter file should change, protecting the rest of the project codebase.
 
 Agents must:
 
@@ -83,26 +84,26 @@ Agents must:
 - store enough metadata to reproduce an experiment later.
 
 ### Approved Data Sources
-- **Binance:** Top priority for OHLCV, Live WebSockets, Trades, Orderbook, Klines, and Tickers[cite: 3].
-- **Bybit:** Core priority for Funding, Open Interest, Orderbook, and Klines[cite: 3].
-- **Coinbase:** Approved for price comparison[cite: 3].
-- **News:** CryptoPanic (News, categories, coins, time) and crawling RSS feeds[cite: 3].
-- **Sentiment:** Alternative.me for Fear & Greed indices[cite: 3].
-- **Macroeconomics:** FRED for Interest Rates, Inflation, Unemployment Rate, and Money Supply[cite: 3].
-- **On-Chain/Reference:** CoinGecko (Coins, Marketcap, Volume, Prices, History)[cite: 3]. Glassnode is approved for later phases[cite: 3].
-- **Strictly Excluded:** X (Twitter) API is excluded for now due to cost and limitations[cite: 3].
+- **Binance:** Top priority for OHLCV, Live WebSockets, Trades, Orderbook, Klines, and Tickers.
+- **Bybit:** Core priority for Funding, Open Interest, Orderbook, and Klines.
+- **Coinbase:** Approved for price comparison.
+- **News:** CryptoPanic (News, categories, coins, time) and crawling RSS feeds.
+- **Sentiment:** Alternative.me for Fear & Greed indices.
+- **Macroeconomics:** FRED for Interest Rates, Inflation, Unemployment Rate, and Money Supply.
+- **On-Chain/Reference:** CoinGecko (Coins, Marketcap, Volume, Prices, History). Glassnode is approved for later phases.
+- **Strictly Excluded:** X (Twitter) API is excluded for now due to cost and limitations.
 
 ## AI and Agent Rules
 
 AI agents must not place live trades, bypass human approval, hide uncertainty, invent data, or claim edge without statistical support.
 
-**Exception for Version 1:** The only permitted early-stage AI agent is a **"Data Quality Agent"**[cite: 3]. Its job is exclusively to monitor data integrity and alert on issues[cite: 3]. 
+**Exception for Version 1:** The only permitted early-stage AI agent is a **"Data Quality Agent"**. Its job is exclusively to monitor data integrity and alert on issues. 
 The Data Quality Agent must rigorously verify:
-- Are candles complete?[cite: 3]
-- Are there missing values or outliers?[cite: 3]
-- Do prices align approximately between Binance and Bybit?[cite: 3]
-- Have WebSocket connections failed?[cite: 3]
-- Were duplicate records stored?[cite: 3]
+- Are candles complete?
+- Are there missing values or outliers?
+- Do prices align approximately between Binance and Bybit?
+- Have WebSocket connections failed?
+- Were duplicate records stored?
 
 If implementing agents, use structured outputs:
 
