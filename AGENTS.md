@@ -1,0 +1,118 @@
+# AGENTS.md
+
+## Project North Star
+
+Project Athena is a reproducible quant research platform for discovering, testing, and validating trading hypotheses.
+
+The goal is not to rush toward a live trading bot. The goal is to build a durable research system that can:
+
+- collect reliable market data,
+- run realistic backtests,
+- track every experiment,
+- compare strategies against benchmarks,
+- reject weak ideas quickly,
+- promote only validated candidates to paper trading,
+- and eventually support agent-assisted research.
+
+Treat "autonomous multi-agent trading AI" as the long-term vision, not the first implementation milestone.
+
+## Current Build Philosophy
+
+Prefer a lean research platform before complex AI automation and before heavy DevOps infrastructure.
+
+The target system architecture is modeled as: **WebSocket** $\rightarrow$ **Kafka / RabbitMQ** $\rightarrow$ **Collector** $\rightarrow$ **TimescaleDB** $\rightarrow$ **Feature Store** $\rightarrow$ **Research Layer**[cite: 3]. 
+
+However, for Version 1, do not introduce message brokers (Kafka/RabbitMQ)[cite: 3]. Stick to direct ingestion into a local database (TimescaleDB) and build the following pipeline priority:
+
+1. Data collection, data quality, and local storage (Save everything from Day 1)[cite: 3].
+2. The Iterative Research Loop: Backtesting engine ↔ Feature engineering ↔ Strategy research.
+3. Independent Risk & Metrics calculation.
+4. Experiment tracking and reproducibility.
+5. Paper trading against simulated live data.
+6. Research-assistant AI and Multi-agent debate.
+7. Live trading only after strict validation and human approval.
+
+If there is a conflict between building something impressive and building something measurable, choose measurable. 
+
+## Agent Behavior
+
+When working in this repository:
+
+- Read the existing project structure before making changes.
+- Keep changes small, testable, and reversible.
+- Do not introduce a large framework unless the project clearly needs it.
+- Prefer simple modules with explicit data contracts.
+- Keep trading logic separate from execution logic.
+- Keep research code separate from live-trading code.
+- Never let an AI-generated signal trade real funds directly.
+- Assume financial backtests are fragile until proven otherwise.
+- Watch aggressively for lookahead bias, survivorship bias, data snooping, and overfitting.
+
+## Architecture Principles
+
+Use clear boundaries between these areas:
+
+- `backend/data/`: collectors, normalization, storage adapters.
+- `research/`: notebooks, experiments, hypotheses, exploratory scripts.
+- `backtesting/`: strategy simulation, cost models, metrics, validation.
+- `features/`: feature generation and feature validation.
+- `strategies/`: strategy definitions and parameter sets.
+- `paper_trading/`: simulated live trading against real-time data.
+- `agents/`: AI-assisted analysis, critique, summarization, and research workflows.
+- `docs/`: design notes, assumptions, experiment summaries, and operating rules.
+
+Do not couple these layers casually. A backtest should not depend on a UI. A strategy should not secretly fetch live data. A research agent should not execute trades.
+
+## Data Rules & The Adapter Mandate
+
+Market data is the foundation of the system. We prioritize APIs that are free and easily interchangeable[cite: 3]. 
+
+**Direct API calls within strategy or research code are strictly forbidden.** All external data must pass through a strict `Exchange` abstraction layer[cite: 3].
+
+- The base `Exchange` class must define explicit contracts such as `get_candles()`, `get_orderbook()`, `get_funding()`, and `get_open_interest()`[cite: 3].
+- Exchange-specific implementations (e.g., `BinanceExchange`, `BybitExchange`, `CoinbaseExchange`) must inherit from this class[cite: 3].
+- If an exchange changes its API, only that specific adapter file should change, protecting the rest of the project codebase[cite: 3].
+
+Agents must:
+
+- preserve raw data where possible,
+- record data source, symbol, timeframe, timestamp, and ingestion time,
+- normalize timestamps explicitly to UTC,
+- avoid silently filling missing data,
+- make data cleaning decisions visible,
+- store enough metadata to reproduce an experiment later.
+
+### Approved Data Sources
+- **Binance:** Top priority for OHLCV, Live WebSockets, Trades, Orderbook, Klines, and Tickers[cite: 3].
+- **Bybit:** Core priority for Funding, Open Interest, Orderbook, and Klines[cite: 3].
+- **Coinbase:** Approved for price comparison[cite: 3].
+- **News:** CryptoPanic (News, categories, coins, time) and crawling RSS feeds[cite: 3].
+- **Sentiment:** Alternative.me for Fear & Greed indices[cite: 3].
+- **Macroeconomics:** FRED for Interest Rates, Inflation, Unemployment Rate, and Money Supply[cite: 3].
+- **On-Chain/Reference:** CoinGecko (Coins, Marketcap, Volume, Prices, History)[cite: 3]. Glassnode is approved for later phases[cite: 3].
+- **Strictly Excluded:** X (Twitter) API is excluded for now due to cost and limitations[cite: 3].
+
+## AI and Agent Rules
+
+AI agents must not place live trades, bypass human approval, hide uncertainty, invent data, or claim edge without statistical support.
+
+**Exception for Version 1:** The only permitted early-stage AI agent is a **"Data Quality Agent"**[cite: 3]. Its job is exclusively to monitor data integrity and alert on issues[cite: 3]. 
+The Data Quality Agent must rigorously verify:
+- Are candles complete?[cite: 3]
+- Are there missing values or outliers?[cite: 3]
+- Do prices align approximately between Binance and Bybit?[cite: 3]
+- Have WebSocket connections failed?[cite: 3]
+- Were duplicate records stored?[cite: 3]
+
+If implementing agents, use structured outputs:
+
+```text
+agent_name:
+hypothesis:
+input_data:
+signal:
+confidence:
+evidence:
+counterarguments:
+known_limitations:
+recommended_next_test:

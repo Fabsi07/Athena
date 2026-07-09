@@ -1,0 +1,10 @@
+.obsidian/
+.claude/
+.agents/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.log
+.DS_Store
