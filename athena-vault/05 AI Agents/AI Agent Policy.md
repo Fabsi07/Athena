@@ -11,7 +11,7 @@ source: CLAUDE.md, AGENTS.md
 
 ## Good AI uses
 
-- **Monitoring data quality** (the [[AI Agent Policy#Data Quality Agent|Data Quality Agent]])
+- **Monitoring data quality** (the [[#The only agent approved for V1: Data Quality Agent|Data Quality Agent]])
 - Proposing strategy ideas
 - Summarizing experiment results
 - Identifying possible flaws
