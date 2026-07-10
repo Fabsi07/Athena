@@ -5,6 +5,7 @@ first. No transformation logic lives downstream of validation here.
 """
 
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from pydantic import BaseModel, field_validator
 
@@ -23,11 +24,11 @@ class CandleRecord(BaseModel):
     timeframe: str
     open_time: datetime
     close_time: datetime
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: float
+    open: Decimal
+    high: Decimal
+    low: Decimal
+    close: Decimal
+    volume: Decimal
     ingestion_time: datetime
     raw_payload: dict | None = None
 
@@ -38,7 +39,7 @@ class CandleRecord(BaseModel):
 
     @field_validator("open", "high", "low", "close", "volume")
     @classmethod
-    def _validate_non_negative(cls, value: float) -> float:
+    def _validate_non_negative(cls, value: Decimal) -> Decimal:
         if value < 0:
             raise ValueError("price and volume fields must be non-negative")
         return value
@@ -58,7 +59,7 @@ class FundingRecord(BaseModel):
     symbol: str
     funding_timestamp_raw: datetime
     funding_settlement_time: datetime
-    funding_rate: float
+    funding_rate: Decimal
     ingestion_time: datetime
     raw_payload: dict | None = None
 

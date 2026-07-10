@@ -6,10 +6,12 @@
 Exchange API -> Exchange Adapter -> validated Records (pydantic) -> TimescaleDB -> idempotent storage
 ```
 
-Later phases add, in order: Feature Engineering, Backtesting, Experiment
-Tracking, Paper Trading, Agents, Live Trading. Each layer only depends on
-the layers before it — a backtest never depends on a UI, a strategy never
-fetches live data on its own, a research agent never executes trades.
+Later phases add, in order (see `docs/ROADMAP.md`): Feature Platform &
+Research, Backtesting & Experiment Tracking, Risk Engine & Paper Trading,
+AI Research Assistant, Multi-Agent Research, Live Trading. Each layer only
+depends on the layers before it — a backtest never depends on a UI, a
+strategy never fetches live data on its own, a research agent never
+executes trades.
 
 ## Exchange Adapters
 
@@ -41,9 +43,9 @@ idempotent (`ON CONFLICT DO NOTHING`). The writer (`timescale_writer.py`)
 performs zero transformation — it only accepts records that already passed
 `backend/data/schemas.py` validation.
 
-## Feature Engineering / Backtesting / Experiment Tracking / Paper Trading / Agents / Live Trading
+## Feature Platform & Research / Backtesting & Experiment Tracking / Risk Engine & Paper Trading / AI Research Assistant / Multi-Agent Research / Live Trading
 
 Not built yet. Each will get its own top-level directory (`features/`,
-`backtesting/`, `strategies/`, `paper_trading/`, `agents/`) per
+`backtesting/`, `strategies/`, `risk/`, `paper_trading/`, `agents/`) per
 `AGENTS.md`'s Architecture Principles, kept decoupled from the layers above
 and below it.

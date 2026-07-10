@@ -11,7 +11,7 @@ source: CLAUDE.md, AGENTS.md
 
 ## Good AI uses
 
-- **Monitoring data quality** (the [[AI Agent Policy#Data Quality Agent|Data Quality Agent]])
+- **Monitoring data quality** (the [[#The only agent approved for V1: Data Quality Agent|Data Quality Agent]])
 - Proposing strategy ideas
 - Summarizing experiment results
 - Identifying possible flaws
@@ -42,12 +42,15 @@ monitor data integrity and alert on issues. It must rigorously verify:
 - Have WebSocket connections failed?
 - Were duplicate records stored?
 
-Everything else agent-related (Research Agent, Documentation Agent, Code Review Agent, Experiment
-Review Agent, Architecture Assistant) is **step-7 work** — see
-[[Open Questions Log#Q04 — V1 agent set|Q04]] and
-[[Long-Term Architecture & Development Order#Preferred development order|Development Order]].
+Per [[Open Questions Log#Q04 — V1 agent set|Q04]] (**resolved**), a Documentation Agent may
+additionally be enabled manually/experimentally to generate documentation summaries — it's not
+part of the operational platform. Everything else (Research Agent, Code Review Agent, Experiment
+Review Agent, Architecture Assistant, Multi-Agent Coordinator) is deferred to
+[[Roadmap#Phase 5 — AI Research Assistant|Phase 5]]/[[Roadmap#Phase 6 — Multi-Agent Research|Phase 6]]
+— see [[Long-Term Architecture & Development Order#Preferred development order|Development Order]].
 Nothing in that category should be built until data, backtesting, risk, and paper trading are
-mature.
+mature. The agent framework must still be designed so future agents can be added without
+architectural changes, and disabled agents must never affect Athena's operation.
 
 ## Required structure for any agent's output
 
@@ -65,14 +68,15 @@ known_limitations:
 recommended_next_test:
 ```
 
-Note: the representation and semantics of `confidence` are still an open question — see
-[[Open Questions Log#Q02 — Confidence semantics|Q02]]. The working recommendation is a plain
-self-reported float 0.0–1.0, since there's no ground truth to derive it from, and per policy it
-must never feed position sizing regardless of its value.
+`confidence` is **resolved** — see [[Open Questions Log#Q02 — Confidence semantics|Q02]]: Agent
+Confidence is a self-reported float 0.0–1.0 (there's no ground truth to derive it from). A separate
+System Confidence field is reserved for later (derived from things like multi-agent agreement or
+data quality) but isn't calculated in V1. Either way, confidence is informational/research-history
+only and must never feed position sizing, order execution, or risk limits.
 
 ## Related
 - [[Trading Research Rules]]
 - [[Roadmap#Phase 5 — AI Research Assistant|Phase 5]]
-- [[Roadmap#Phase 6 — Multi-Agent Research Layer|Phase 6]]
+- [[Roadmap#Phase 6 — Multi-Agent Research|Phase 6]]
 
 #athena/ai-policy

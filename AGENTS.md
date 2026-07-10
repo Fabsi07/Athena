@@ -22,15 +22,16 @@ Prefer a lean research platform before complex AI automation and before heavy De
 
 The target system architecture is modeled as: **WebSocket** $\rightarrow$ **Kafka / RabbitMQ** $\rightarrow$ **Collector** $\rightarrow$ **TimescaleDB** $\rightarrow$ **Feature Store** $\rightarrow$ **Research Layer**. 
 
-However, for Version 1, do not introduce message brokers (Kafka/RabbitMQ). Stick to direct ingestion into a local database (TimescaleDB) and build the following pipeline priority:
+However, for Version 1, do not introduce message brokers (Kafka/RabbitMQ). Stick to direct ingestion into a local database (TimescaleDB) and build in the following order, matching `docs/ROADMAP.md` (the authoritative implementation order):
 
-1. Data collection, data quality, and local storage (Save everything from Day 1).
-2. The Iterative Research Loop: Backtesting engine ↔ Feature engineering ↔ Strategy research.
-3. Independent Risk & Metrics calculation.
-4. Experiment tracking and reproducibility.
-5. Paper trading against simulated live data.
-6. Research-assistant AI and Multi-agent debate.
-7. Live trading only after strict validation and human approval.
+0. **Project Foundation** — repository structure, coding standards, governance, dev environment, service interfaces. No trading logic.
+1. **Data Platform** — exchange adapters, data ingestion, TimescaleDB, historical backfill, scheduler, data validation, Data Quality Service, collector monitoring, initial dashboard, logging/observability. Save everything from Day 1.
+2. **Feature Platform & Research** — Feature Factory, Feature Registry, feature versioning, indicator generation, research workflows, dataset versioning.
+3. **Backtesting & Experiment Tracking** — developed together: backtesting engine, portfolio simulation, risk-adjusted metrics, Buy & Hold benchmark, experiment tracking, result reproducibility.
+4. **Risk Engine & Paper Trading** — risk engine, position sizing, kill switch, portfolio controls, paper trading, live monitoring, dashboard expansion.
+5. **AI Research Assistant** — research assistant, documentation assistant, experiment summaries, hypothesis generation, critique support.
+6. **Multi-Agent Research** — multi-agent discussions, consensus evaluation, architecture/code review agents, research debate, evidence aggregation. Only after Phase 5 has demonstrated clear value.
+7. **Live Trading** — only after strict validation, a validated risk engine, successful paper trading, and explicit human approval.
 
 If there is a conflict between building something impressive and building something measurable, choose measurable. 
 
@@ -58,6 +59,7 @@ Use clear boundaries between these areas:
 - `backtesting/`: strategy simulation, cost models, metrics, validation.
 - `features/`: feature generation and feature validation.
 - `strategies/`: strategy definitions and parameter sets.
+- `risk/`: risk engine, position sizing, kill switch, portfolio risk controls — independent of strategy code, with final authority over position sizing and execution approval.
 - `paper_trading/`: simulated live trading against real-time data.
 - `agents/`: AI-assisted analysis, critique, summarization, and research workflows.
 - `docs/`: design notes, assumptions, experiment summaries, and operating rules.

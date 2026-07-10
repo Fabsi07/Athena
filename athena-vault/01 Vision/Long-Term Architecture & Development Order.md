@@ -29,7 +29,7 @@ Every architectural choice in [[System Architecture & Repository Layout]] is del
 | Kafka / RabbitMQ | *(skipped entirely for V1)* | ⬜ Not started, not planned soon |
 | Collector | Adapter + script (`scripts/ingest_bybit_funding.py`) | ✅ Minimal version exists |
 | TimescaleDB | TimescaleDB (same) | ✅ Schema + idempotent writer exist |
-| Feature Store | `features/` (planned) | ⬜ [[Roadmap#Phase 2 — Backtesting\|Phase 2]] |
+| Feature Store | `features/` (planned) | ⬜ [[Roadmap#Phase 2 — Feature Platform & Research\|Phase 2]] |
 | Research Layer | `research/`, `backtesting/`, `strategies/` (planned) | ⬜ Not started |
 
 A message broker only becomes justified once there are multiple independent consumers of the same
@@ -39,17 +39,25 @@ simpler, cheaper, and easier to debug.
 
 ## Preferred development order
 
-Work in this order unless explicitly told otherwise. Each step should be solid before the next
-starts (see [[Roadmap]] for the phase-by-phase detail):
+Work in this order unless explicitly told otherwise. This mirrors `docs/ROADMAP.md`, which is the
+**authoritative implementation order** — each step should be solid before the next starts (see
+[[Roadmap]] for the phase-by-phase detail):
 
-1. **Data ingestion** — Binance, Bybit, FRED, CoinGecko, Alternative.me
-2. **Data validation and local storage** — via TimescaleDB
-3. **The Iterative Loop** — Backtesting Engine ↔ Feature Engineering ↔ Strategy Research
-4. **Independent Risk & Metrics Module**
-5. **Experiment tracking**
-6. **Paper trading** — simulated execution on live data
-7. **AI research assistant and multi-agent debate**
-8. **Live trading controls**
+0. **Project Foundation** — repository structure, coding standards, governance, dev environment, service interfaces. No trading logic.
+1. **Data Platform** — exchange adapters, ingestion, TimescaleDB, historical backfill, scheduler, data validation, Data Quality Service, collector monitoring, initial dashboard, logging/observability.
+2. **Feature Platform & Research** — Feature Factory, Feature Registry, feature versioning, indicator generation, research workflows, dataset versioning.
+3. **Backtesting & Experiment Tracking** — developed together: backtesting engine, portfolio simulation, risk-adjusted metrics, Buy & Hold benchmark, experiment tracking, result reproducibility.
+4. **Risk Engine & Paper Trading** — risk engine, position sizing, kill switch, portfolio controls, paper trading, live monitoring, dashboard expansion.
+5. **AI Research Assistant** — research assistant, documentation assistant, experiment summaries, hypothesis generation, critique support.
+6. **Multi-Agent Research** — multi-agent discussions, consensus evaluation, architecture/code review agents, research debate, evidence aggregation. Only after Phase 5 has demonstrated clear value.
+7. **Live Trading** — only after strict validation, a validated risk engine, successful paper trading, and explicit human approval.
+
+> [!note] Earlier version of this order
+> An earlier version of this list gave Risk & Metrics its own numbered step *before* experiment
+> tracking, while the roadmap of the time didn't have a matching phase for it — a pre-implementation
+> architecture review flagged that mismatch. The order above and [[Roadmap]] are now kept in sync:
+> Risk Engine is grouped with Paper Trading (Phase 4), and Backtesting is grouped with Experiment
+> Tracking (Phase 3).
 
 > [!danger] Staging rule
 > `AGENT_PROTOCOL.md` and `AI_ARCHITECTURE.md` (from the original design doc set) describe a

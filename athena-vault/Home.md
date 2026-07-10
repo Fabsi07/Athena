@@ -12,15 +12,25 @@ tags: [athena, moc]
 > and the open decisions still blocking further implementation.
 >
 > It is generated from the repository's governing docs (`CLAUDE.md`, `AGENTS.md`) and the actual
-> code committed so far on `athena/v1-data-ingestion`. Treat it as a snapshot — as the codebase
-> evolves, the source files remain the ground truth; re-sync this vault when they diverge.
+> code committed so far on `main` (originally built on `athena/v1-data-ingestion`, since merged).
+> Treat it as a snapshot — as the codebase evolves, the source files remain the ground truth;
+> re-sync this vault when they diverge.
 
 ## Where things stand right now
 
-- ✅ **Phase 0 — Foundation** and the start of **Phase 1 — Data Ingestion** exist in code:
-  a Bybit + Binance adapter, pydantic schemas, and an idempotent TimescaleDB writer.
-- ⬜ Everything from feature engineering onward ([[Roadmap]] phases 2–7) is **not built yet**.
-- ⬜ 34 implementation-blocking ambiguities are still open — see [[Open Questions Log]].
+- ✅ **Phase 0 — Foundation** and the start of **Phase 1 — Data Platform** exist in code:
+  a Bybit + Binance adapter, pydantic schemas (now `Decimal`-typed, `NUMERIC(28,12)` in Postgres),
+  and an idempotent TimescaleDB writer.
+- ⬜ Everything from [[Roadmap#Phase 2 — Feature Platform & Research|Feature Platform & Research]]
+  onward ([[Roadmap]] phases 2–7) is **not built yet**.
+- ✅ 33 of the 34 implementation-blocking ambiguities have been **resolved** by the project owner —
+  see [[Open Questions Log]]. Only Q06 (default fee/slippage values) remains explicitly deferred,
+  and it blocks [[Roadmap#Phase 3 — Backtesting & Experiment Tracking|Phase 3]].
+- 🟡 A pre-implementation architecture review found the roadmap's phase sequencing didn't match
+  `CLAUDE.md`/`AGENTS.md`, and that committed code had already drifted from two resolved decisions
+  (`NUMERIC(28,12)` precision and canonical timeframe encoding). Both have been fixed; see
+  [[Open Questions Log]]'s note on decisions not yet ported into implementation docs for what's
+  still outstanding.
 
 ## Map of Content
 

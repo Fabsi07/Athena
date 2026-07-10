@@ -1,14 +1,14 @@
 ---
 title: Getting Started
 tags: [athena, setup]
-source: README.md (athena/v1-data-ingestion branch)
+source: README.md (main)
 ---
 
 # Getting Started
 
-> [!warning] Branch note
-> Everything described here exists on the `athena/v1-data-ingestion` branch, **not** on `main`.
-> `main` currently only tracks `.gitignore`, `AGENTS.md`, and `CLAUDE.md`.
+> [!note] Branch note
+> Everything described here was originally built on the `athena/v1-data-ingestion` branch and has
+> since been merged into `main`.
 
 ## What you can actually run today
 
@@ -52,6 +52,6 @@ is responsible for.
 ## Related
 - [[Exchange Adapters]]
 - [[TimescaleDB Storage]]
-- [[Roadmap#Phase 1 — Data Ingestion & Data Quality|Phase 1]]
+- [[Roadmap#Phase 1 — Data Platform|Phase 1]]
 
 #athena/setup

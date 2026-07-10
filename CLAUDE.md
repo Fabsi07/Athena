@@ -22,16 +22,17 @@ The system should not place live trades until research, validation, paper tradin
 
 ## Preferred Development Order
 
-Work in this order unless the user explicitly asks otherwise:
+Work in this order unless the user explicitly asks otherwise. This mirrors
+`docs/ROADMAP.md`, which is the authoritative implementation order:
 
-1. Data ingestion (Focusing on free data: Binance, Bybit, FRED, CoinGecko, Alternative.me).
-2. Data validation and local storage via TimescaleDB.
-3. **The Iterative Loop:** Backtesting Engine ↔ Feature Engineering ↔ Strategy Research.
-4. Independent Risk & Metrics Module.
-5. Experiment tracking.
-6. Paper trading (Simulated execution on live data).
-7. AI research assistant and Multi-agent debate.
-8. Live trading controls.
+0. **Project Foundation** — repository structure, coding standards, project governance, dev environment (`uv`, `pytest`, Docker Compose, TimescaleDB), CI-ready layout, service interfaces and dependency boundaries. No trading logic.
+1. **Data Platform** — exchange adapters (Binance, Bybit, Coinbase reference), data ingestion, TimescaleDB, historical backfill, scheduler, data validation, Data Quality Service, collector monitoring, initial dashboard, logging and observability.
+2. **Feature Platform & Research** — Feature Factory, Feature Registry, feature versioning, indicator generation, research workflows, dataset versioning.
+3. **Backtesting & Experiment Tracking** — developed together: backtesting engine, portfolio simulation, risk-adjusted metrics, Buy & Hold benchmark, experiment tracking, result reproducibility.
+4. **Risk Engine & Paper Trading** — risk engine, position sizing, kill switch, portfolio controls, paper trading, live monitoring, dashboard expansion.
+5. **AI Research Assistant** — research assistant, documentation assistant, experiment summaries, hypothesis generation, critique support. AI never executes trades, changes risk limits, or bypasses human oversight.
+6. **Multi-Agent Research** — multi-agent discussions, consensus evaluation, architecture/code review agents, research debate, evidence aggregation. Only after Phase 5 has demonstrated clear value.
+7. **Live Trading** — the final milestone; requires a stable data platform, proven backtesting, reliable experiment tracking, a validated risk engine, successful paper trading, and explicit human approval. Remains optional and must never become the default operating mode.
 
 If asked to build a complex agent system or distributed infrastructure (like Kafka/RabbitMQ) early, refuse and first create the smaller, local TimescaleDB foundation it needs.
 

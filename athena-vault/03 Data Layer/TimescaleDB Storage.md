@@ -17,7 +17,8 @@ for reproducibility): `timescale/timescaledb:2.15.0-pg16`.
 ```sql
 CREATE TABLE candles (
     exchange, symbol, timeframe, open_time, close_time,
-    open, high, low, close, volume,
+    open NUMERIC(28,12), high NUMERIC(28,12), low NUMERIC(28,12),
+    close NUMERIC(28,12), volume NUMERIC(28,12),
     ingestion_time, raw_payload JSONB,
     PRIMARY KEY (exchange, symbol, timeframe, open_time)
 );
@@ -25,7 +26,7 @@ SELECT create_hypertable('candles', 'open_time', if_not_exists => TRUE);
 
 CREATE TABLE funding_rates (
     exchange, symbol, funding_timestamp_raw, funding_settlement_time,
-    funding_rate, ingestion_time, raw_payload JSONB,
+    funding_rate NUMERIC(28,12), ingestion_time, raw_payload JSONB,
     PRIMARY KEY (exchange, symbol, funding_timestamp_raw)
 );
 SELECT create_hypertable('funding_rates', 'funding_timestamp_raw', if_not_exists => TRUE);
@@ -77,6 +78,7 @@ fresh volume creates the tables automatically — see [[Getting Started]].
 ## Related
 - [[Schemas]]
 - [[Exchange Adapters]]
-- [[Open Questions Log#Q10 — Numeric precision for price/volume columns|Q10]] — open question on whether `DOUBLE PRECISION` should become `NUMERIC(20,8)`
+- [[Open Questions Log#Q10 — Numeric precision for price/volume columns|Q10]] — **resolved:**
+  price/volume/rate columns are `NUMERIC(28,12)`, implemented
 
 #athena/data
