@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
 import httpx
 import pytest
@@ -44,7 +45,7 @@ def test_get_funding_parses_and_normalizes_utc():
     record = records[0]
     assert record.exchange == "bybit"
     assert record.symbol == "BTCUSDT"
-    assert record.funding_rate == pytest.approx(0.0001)
+    assert record.funding_rate == Decimal("0.0001")
     assert record.funding_timestamp_raw == datetime(2024, 1, 1, tzinfo=timezone.utc)
     assert record.funding_settlement_time == datetime(2024, 1, 1, tzinfo=timezone.utc)
     assert record.raw_payload == {
@@ -90,16 +91,17 @@ def test_get_candles_parses_and_computes_close_time():
         )
     )
 
-    records = _exchange().get_candles("BTCUSDT", "60", START, END)
+    records = _exchange().get_candles("BTCUSDT", "1h", START, END)
 
     assert len(records) == 1
     record = records[0]
+    assert record.timeframe == "1h"
     assert record.open_time == datetime(2024, 1, 1, tzinfo=timezone.utc)
     assert record.close_time == datetime(
         2024, 1, 1, 0, 59, 59, 999000, tzinfo=timezone.utc
     )
-    assert record.open == 100.0
-    assert record.volume == 10.0
+    assert record.open == Decimal("100.0")
+    assert record.volume == Decimal("10.0")
 
 
 @respx.mock

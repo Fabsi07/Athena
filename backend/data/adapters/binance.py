@@ -9,6 +9,7 @@ Docs: https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
 """
 
 from datetime import datetime, timezone
+from decimal import Decimal
 
 import httpx
 
@@ -62,11 +63,11 @@ class BinanceExchange(Exchange):
                     timeframe=timeframe,
                     open_time=_ms_to_utc(open_ms),
                     close_time=_ms_to_utc(close_ms),
-                    open=float(open_),
-                    high=float(high),
-                    low=float(low),
-                    close=float(close),
-                    volume=float(volume),
+                    open=Decimal(open_),
+                    high=Decimal(high),
+                    low=Decimal(low),
+                    close=Decimal(close),
+                    volume=Decimal(volume),
                     ingestion_time=now,
                     raw_payload={"row": row},
                 )
