@@ -20,9 +20,9 @@ time, not later at storage time.
 |---|---|---|
 | `exchange` | `str` | e.g. `"bybit"`, `"binance"` |
 | `symbol` | `str` | exchange-native symbol, e.g. `"BTCUSDT"` |
-| `timeframe` | `str` | exchange-native interval string (not yet a canonical enum — see [[Open Questions Log#Q11 — Canonical timeframe set\|Q11]]) |
+| `timeframe` | `str` | canonical value (`1m/5m/15m/1h/4h/1d`, [[Open Questions Log#Q11 — Canonical timeframe set\|Q11]]) — adapters translate exchange-native interval codes to/from this at the boundary |
 | `open_time`, `close_time` | `datetime` (UTC) | candle boundaries |
-| `open`, `high`, `low`, `close`, `volume` | `float` | validated non-negative |
+| `open`, `high`, `low`, `close`, `volume` | `Decimal` | validated non-negative; parsed directly from the exchange's JSON strings to avoid float round-trip precision loss |
 | `ingestion_time` | `datetime` (UTC) | when Athena fetched it, not when the candle closed |
 | `raw_payload` | `dict \| None` | original exchange JSON, preserved as-is |
 
@@ -33,7 +33,7 @@ time, not later at storage time.
 | `exchange`, `symbol` | `str` | |
 | `funding_timestamp_raw` | `datetime` (UTC) | **exactly as reported by the exchange** |
 | `funding_settlement_time` | `datetime` (UTC) | Athena's own interpreted settlement instant |
-| `funding_rate` | `float` | |
+| `funding_rate` | `Decimal` | |
 | `ingestion_time` | `datetime` (UTC) | |
 | `raw_payload` | `dict \| None` | |
 
@@ -45,14 +45,19 @@ time, not later at storage time.
 > identical (Bybit's `fundingRateTimestamp` is documented as the settlement instant itself), but
 > the schema doesn't assume that holds for every exchange.
 
-## Open questions affecting this schema
+## Resolved decisions reflected in this schema
 
-- [[Open Questions Log#Q10 — Numeric precision for price/volume columns|Q10]] — current code uses
-  Python `float` / Postgres `DOUBLE PRECISION`; the DB design doc originally called for
-  `NUMERIC(20,8)` fixed-point precision. Not yet reconciled.
-- [[Open Questions Log#Q11 — Canonical timeframe set|Q11]] — no enum of supported timeframes exists
-  yet; adapters currently validate against their own exchange-specific interval maps (see
-  [[Exchange Adapters]]).
+- [[Open Questions Log#Q10 — Numeric precision for price/volume columns|Q10]] — **resolved:**
+  `NUMERIC(28,12)` (not the originally recommended `NUMERIC(20,8)`). Both `CandleRecord`/
+  `FundingRecord` (Python `Decimal`) and `schema.sql` (Postgres `NUMERIC(28,12)`) implement this;
+  a pre-implementation architecture review had found the committed schema still used
+  `DOUBLE PRECISION`/`float`, which has since been fixed.
+- [[Open Questions Log#Q11 — Canonical timeframe set|Q11]] — **resolved:** canonical set is
+  `1m/5m/15m/1h/4h/1d`, encoded as short strings. `BybitExchange.get_candles()` now takes this
+  canonical form as its public parameter and translates internally to Bybit's native interval
+  codes (see [[Exchange Adapters]]) — an earlier version stored Bybit's raw codes (`"60"`, `"D"`)
+  directly in `timeframe`, which broke cross-exchange joins on the same nominal candle; that's
+  fixed now too.
 
 ## Related
 - [[Exchange Adapter Pattern]]

@@ -13,10 +13,14 @@ Both adapters implement the [[Exchange Adapter Pattern|`Exchange` contract]]. Ne
 
 Uses Bybit's V5 REST API (`https://api.bybit.com`), `category="linear"` (perpetuals) by default.
 
-- **`get_candles(symbol, timeframe, start, end)`** — hits `/v5/market/kline`. Interval strings are
-  validated against a hardcoded map (`"1"`, `"3"`, `"5"`, `"15"`, `"30"`, `"60"`, `"120"`, `"240"`,
-  `"360"`, `"720"`, `"D"`, `"W"`) — unsupported intervals raise `ValueError` rather than guessing
-  a candle's close time.
+- **`get_candles(symbol, timeframe, start, end)`** — hits `/v5/market/kline`. `timeframe` is the
+  **canonical** vocabulary (`1m`, `5m`, `15m`, `1h`, `4h`, `1d` — see
+  [[Open Questions Log#Q11 — Canonical timeframe set|Q11]]), translated internally to Bybit's
+  native interval codes (`"1"`, `"5"`, `"15"`, `"60"`, `"240"`, `"D"`) for the API call and for the
+  close-time-duration lookup; unsupported canonical values raise `ValueError` rather than guessing
+  a candle's close time. The returned `CandleRecord.timeframe` carries the canonical value, not
+  Bybit's native code — this fixes an earlier version where Bybit rows stored `"60"`/`"D"` while
+  Binance rows stored `"1h"`/`"1d"` for the same nominal candle, breaking cross-exchange joins.
 - **`get_funding(symbol, start, end)`** — hits `/v5/market/funding/history`.
 - **Error handling quirk:** Bybit returns HTTP 200 even on API-level errors, with the real status
   in the JSON body's `retCode` field. The adapter checks both HTTP status *and* `retCode != 0`,
@@ -29,7 +33,9 @@ Uses Bybit's V5 REST API (`https://api.bybit.com`), `category="linear"` (perpetu
 
 Uses Binance's spot REST API (`https://api.binance.com`).
 
-- **`get_candles(symbol, timeframe, start, end)`** only — hits `/api/v3/klines`.
+- **`get_candles(symbol, timeframe, start, end)`** only — hits `/api/v3/klines`. Binance's own
+  native interval strings already coincide with the canonical vocabulary for `1m/5m/15m/1h/4h/1d`
+  (see [[Schemas]]), so no translation layer is needed here the way Bybit's adapter needs one.
 - `get_funding`, `get_orderbook`, `get_open_interest` all raise `NotImplementedError` with an
   explicit message ("not implemented in V1").
 - Deliberately minimal: the adapter's own docstring says this is *"for later Binance/Bybit price
@@ -42,6 +48,9 @@ Uses Binance's spot REST API (`https://api.binance.com`).
   `tests/test_bybit_adapter.py`, which mocks HTTP with `respx`).
 - Both convert exchange millisecond timestamps to timezone-aware UTC `datetime` via a local
   `_ms_to_utc()` helper.
+- Both build `open`/`high`/`low`/`close`/`volume`/`funding_rate` as `Decimal`, parsed directly from
+  the exchange's JSON string fields (not via `float()`), matching [[Schemas]]'s `NUMERIC(28,12)`
+  precision (see [[Open Questions Log#Q10 — Numeric precision for price/volume columns|Q10]]).
 - `ingestion_time` is stamped once per API call (`datetime.now(timezone.utc)`), shared across all
   records returned from that call.
 

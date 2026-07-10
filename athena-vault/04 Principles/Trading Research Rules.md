@@ -38,9 +38,14 @@ Every result must be clearly labeled as one of:
 - **Limit-order fill-at-touch** is optimistic and may **only** be used when explicitly labeled and
   justified in the experiment writeup.
 
-Concrete defaults for fees/slippage/position sizing are still open — see
-[[Open Questions Log#Q06 — Default fee and slippage values|Q06]] and
-[[Open Questions Log#Q07 — Default position sizing model and initial capital|Q07]].
+Position sizing is **resolved**: fixed 5% of portfolio equity per position, $10,000 USDT starting
+capital, with the Risk Engine holding final authority to approve/reduce/reject/rebalance any
+proposed size — see
+[[Open Questions Log#Q07 — Default position sizing model and initial capital|Q07]]. Default fee and
+slippage values remain **explicitly deferred** — see
+[[Open Questions Log#Q06 — Default fee and slippage values|Q06]] — and are called out as the one
+open blocker for [[Roadmap#Phase 3 — Backtesting & Experiment Tracking|Phase 3]], since this
+principle requires fees/slippage in every backtest.
 
 ## Non-negotiable principles (`docs/PRINCIPLES.md`)
 

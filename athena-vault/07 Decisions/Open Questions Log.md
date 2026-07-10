@@ -2,7 +2,7 @@
 title: Open Questions Log
 tags: [athena, decisions, open-questions]
 source: DEVREAD.md, answers.md, docs/answers_obsidian_optimized.md
-status: 34 open, 0 accepted
+status: 33 resolved (accepted or modified), 1 explicitly deferred (Q06)
 ---
 
 # Open Questions Log
@@ -12,14 +12,24 @@ status: 34 open, 0 accepted
 `DATABASE_SCHEMA`, `DATA_ARCHITECTURE`, `FEATURE_FACTORY`, `OBSERVABILITY`, `PAPER_TRADING`,
 `PROJECT_RULES`, `RESEARCH_PROTOCOL`, `RISK_ENGINE`, `SYSTEM_ARCHITECTURE`, `TESTING`), audited
 against [[North Star|CLAUDE.md's constraints]] ($0 budget, conservative fills, staged
-development). None have an owner decision recorded yet — this is a punch list, not a settled spec.
+development).
 
-> [!success] Fast path
-> For a fast V1 implementation: accept the recommendation on everything **except** Q03, Q04, Q33,
-> Q34 — those four are scope-control decisions (defer to later phases), not current blockers.
+> [!success] Resolved
+> `docs/answers_obsidian_optimized.md` is the **authoritative decision log** — the project owner
+> has recorded a decision for every question except Q06, which is explicitly deferred ("decide
+> later" — see below). Each entry below shows the actual decision, not just the original
+> recommendation; where the owner modified Claude's recommendation, that's called out.
 
 > [!info] Already fully implementable, no open questions
 > `CODING_STANDARDS.md` and `PROJECT_RULES.md`.
+
+> [!warning] Not yet ported into implementation docs
+> These decisions currently live only in `docs/answers_obsidian_optimized.md` — most of the
+> referenced source documents (`DATABASE_SCHEMA.md`, `RISK_ENGINE.md`, `BACKTESTING.md`, etc.)
+> don't exist anywhere in the repo (`DEVREAD.md` traces them to an external, uncommitted design-doc
+> bundle). A pre-implementation architecture review flagged this as the root cause of two concrete
+> bugs that had already crept into committed code (Q10, Q11 below) and recommended giving these
+> decisions a real home in `docs/`. That porting work is still open.
 
 ---
 
@@ -28,15 +38,19 @@ development). None have an owner decision recorded yet — this is a punch list,
 ### Q01 — Request/Response schema — field types
 **Q:** What concrete data types, formats, and default values should `Task ID`, `Timestamp`,
 `Priority`, `Timeout` use?
-**Recommendation:** Task ID = UUID4 string; Timestamp = ISO-8601 UTC; Priority = enum
-`{LOW, NORMAL, HIGH}` default `NORMAL`; Timeout = int seconds, default 120s, overridable per task
-type.
+**Decision (modified):** Task ID = UUID4 string, immutable. Timestamp = ISO-8601 UTC. Priority =
+enum `{LOW, NORMAL, HIGH, CRITICAL}` (owner added `CRITICAL` to Claude's original 3-value enum),
+default `NORMAL`. Timeout = int seconds, default 120, `null` = no timeout, overridable per task
+type. Also added: optional UUID4 `Correlation ID` for tracing related requests, and an optional
+`Metadata` dict for future extension. All request metadata is immutable after task creation.
 
 ### Q02 — Confidence semantics
 **Q:** What representation should agent confidence take, and is it self-reported or derived?
-**Recommendation:** Plain float 0.0–1.0, self-reported by the agent — no ground truth exists to
-derive it from, and per policy it must never feed position sizing anyway (see
-[[AI Agent Policy]]).
+**Decision (modified):** Agent Confidence = self-reported float 0.0–1.0 (matches Claude's
+recommendation). Owner additionally specified a System Confidence concept — optionally derivable
+later from multi-agent agreement, data quality, or statistical significance — not calculated in
+V1. Either way, confidence never feeds position sizing, execution, or risk limits; see
+[[AI Agent Policy]].
 
 ---
 
@@ -44,14 +58,19 @@ derive it from, and per policy it must never feed position sizing anyway (see
 
 ### Q03 — LLM provider/model
 **Q:** Which LLM provider/API is approved, and what's the spend ceiling?
-**Recommendation:** Don't decide now — it's [[Roadmap#Phase 5 — AI Research Assistant|Phase 5]]
-work. Default to existing Claude access with a hard spend cap rather than integrating a new
-vendor, when the time comes.
+**Decision (modified):** No provider required for V1 (disabled by default). Athena must stay
+provider-agnostic — provider, model, endpoint, token budget, and timeout are all configurable, and
+no business logic may depend on a specific provider. Hard monthly spend limit defaults to $0; paid
+providers require explicit opt-in. Local models preferred when sufficient. This is broader than
+Claude's original recommendation (which assumed reusing an existing Claude subscription).
 
 ### Q04 — V1 agent set
 **Q:** Which of the six listed agent types are actually required for V1?
-**Recommendation:** Only the [[AI Agent Policy#The only agent approved for V1: Data Quality Agent|Data Quality Agent]].
-Everything else waits for Phase 5+.
+**Decision (modified):** [[AI Agent Policy#The only agent approved for V1: Data Quality Agent|Data
+Quality Agent]] only, as recommended. Owner additionally carved out a Documentation Agent as
+experimental/optional (may be enabled manually, not part of the operational platform). Everything
+else (Research, Experiment Review, Code Review, Architecture Assistant, Multi-Agent Coordinator) is
+deferred to [[Roadmap#Phase 5 — AI Research Assistant|Phase 5]]+.
 
 ---
 
@@ -60,9 +79,9 @@ Everything else waits for Phase 5+.
 ### Q05 — Transport mechanism for V1
 **Q:** Confirm V1 services are plain in-process Python interfaces, and `StreamingDataService` can
 be deferred.
-**Recommendation:** Yes to both — in-process Python calls only, no HTTP/gRPC/queues. Defer
-`StreamingDataService` until [[Roadmap#Phase 4 — Paper Trading|Paper Trading]] actually needs a
-live feed.
+**Decision (accepted as recommended):** Yes to both — in-process Python calls only, no
+HTTP/gRPC/queues. `StreamingDataService` deferred until
+[[Roadmap#Phase 4 — Risk Engine & Paper Trading|Paper Trading]] actually needs a live feed.
 
 ---
 
@@ -70,23 +89,31 @@ live feed.
 
 ### Q06 — Default fee and slippage values
 **Q:** What are the actual default fee percentages and slippage value?
-**Recommendation:** ~0.1% taker/maker spot on Binance/Bybit, ~0.05–0.06% taker on perps; flat 5 bps
-slippage per trade. Always use the taker fee even for "market orders" — conservative per
-[[Trading Research Rules]].
+**Decision:** ⬜ **Explicitly deferred by the project owner** — "we can't answer it now, it's
+better to decide later." This is the one question still genuinely open. Since
+`docs/PRINCIPLES.md` requires fees, slippage, and conservative fill assumptions in every backtest,
+this is a real blocker for [[Roadmap#Phase 3 — Backtesting & Experiment Tracking|Phase 3]], not
+just an unanswered nice-to-have.
 
 ### Q07 — Default position sizing model and initial capital
 **Q:** Which sizing model is the default, and what's the default starting capital?
-**Recommendation:** "% of Equity" sizing (100% notional per signal, single-asset backtest), $10,000
-starting capital.
+**Decision (modified):** Fixed 5% of portfolio equity per position (owner chose 5%, not Claude's
+recommended 100%-notional single-asset sizing), $10,000 USDT starting capital. Strategies may
+optionally propose a size/allocation, but the Risk Engine always has final authority to approve,
+reduce, reject, or rebalance it.
 
 ### Q08 — Overfitting-detection thresholds
 **Q:** What numeric thresholds should trigger an automatic overfitting warning?
-**Recommendation:** Flag if trade count < 30, annualized Sharpe > 3, or a ±10–20% parameter change
-swings performance by >50%.
+**Decision (modified):** Same numeric thresholds as recommended (trade count < 30, annualized
+Sharpe > 3.0, ±10–20% parameter change swinging performance >50%), plus two added conditions:
+strong in-sample/out-of-sample divergence, and large walk-forward degradation. All configurable,
+and explicitly **warnings only** — they must never auto-reject a strategy; final call stays with
+the researcher.
 
 ### Q09 — Mandatory benchmark
 **Q:** Should every experiment auto-run against a fixed benchmark, or is it manual?
-**Recommendation:** Auto-run Buy & Hold (same asset/timeframe) by default; anything else opt-in.
+**Decision (accepted as recommended):** Auto-run Buy & Hold (same asset/timeframe) by default;
+anything else opt-in.
 
 ---
 
@@ -100,19 +127,27 @@ No open questions — fully implementable as written.
 
 ### Q10 — Numeric precision for price/volume columns
 **Q:** What precision/scale should price and volume columns use?
-**Recommendation:** `NUMERIC(20,8)`. Note: current code ([[Schemas]], [[TimescaleDB Storage]])
-actually uses `float` / `DOUBLE PRECISION` — **not yet reconciled with this recommendation.**
+**Decision (modified):** `NUMERIC(28,12)` — higher precision than Claude's recommended
+`NUMERIC(20,8)`, with room to increase further if a future exchange needs it. **Implemented**: both
+`schema.sql` and `CandleRecord`/`FundingRecord` (via Python `Decimal`) now use this — see
+[[Schemas]] and [[TimescaleDB Storage]]. A pre-implementation architecture review had found the
+committed code still used `DOUBLE PRECISION`/`float` despite this decision; that drift is fixed.
 
 ### Q11 — Canonical timeframe set
 **Q:** What is the canonical list of supported timeframes, and how is `timeframe` encoded?
-**Recommendation:** Start minimal — `1h`, `1d` only, short string enum. Add `1m`/`5m` later only if
-a strategy needs them. Note: [[Exchange Adapters]] currently validate against each exchange's own
-native interval strings, not a canonical set.
+**Decision (modified):** Full set `1m, 5m, 15m, 1h, 4h, 1d`, encoded as short strings — broader
+than Claude's "start with just 1h/1d" recommendation; the architecture supports the whole set from
+the start even though collectors may initially fetch only a subset (see Q14). **Implemented**:
+[[Exchange Adapters]] now translate exchange-native interval codes to/from this canonical set at
+the adapter boundary. A pre-implementation architecture review had found Bybit's adapter storing
+its own native codes (`"60"`, `"D"`) directly, which silently broke cross-exchange joins on the
+same nominal candle; that's fixed.
 
 ### Q12 — market_sessions default definitions
 **Q:** What are the default UTC boundaries for Asia/London/New York sessions?
-**Recommendation:** Asia 00:00–09:00 UTC, London 08:00–16:00 UTC, New York 13:00–21:00 UTC
-(standard forex convention).
+**Decision (modified):** Asia 00:00–08:00 UTC (not 00:00–09:00 as recommended), London 08:00–16:00
+UTC, New York 13:00–21:00 UTC. Explicitly analytical time windows only, not exchange open/close
+times; configurable, with DST support possible later.
 
 ---
 
@@ -120,20 +155,29 @@ native interval strings, not a canonical set.
 
 ### Q13 — Canonical symbol/quote-currency convention
 **Q:** Should USDT/USDC/BUSD normalize to "USD", or be preserved as distinct?
-**Recommendation:** Preserve it — canonical symbol should be `BTC/USDT`, not `BTC/USD`. Stablecoins
-de-peg sometimes; collapsing them destroys real information.
+**Decision (accepted as recommended):** Preserve it — canonical symbol is `BTC/USDT`, not
+`BTC/USD`. Stablecoins de-peg sometimes; collapsing them destroys real information.
+**Not yet implemented**: both adapters currently store the exchange's raw symbol format
+(`"BTCUSDT"`, no separator) rather than this canonical form — flagged in the architecture review
+as a remaining gap, not yet actioned.
 
 ### Q14 — Asset and timeframe universe for V1
 **Q:** What specific symbols and timeframes should the V1 collector target?
-**Recommendation:** Start narrow — BTC, ETH (maybe SOL) vs USDT, on Binance + Bybit.
+**Decision (modified):** BTC/USDT and ETH/USDT on Binance + Bybit (Coinbase as reference/price-check
+only) — narrower than Claude's "maybe add SOL" suggestion. Full canonical timeframe set is
+supported architecturally (Q11), but initial collection is scoped to `1h`/`1d` only; lower
+timeframes and additional assets (SOL, BNB, XRP, ...) come later, once the pipeline proves stable.
 
 ### Q15 — Missing-data interpolation trigger mechanism
 **Q:** How does a consumer "explicitly request" interpolation?
-**Recommendation:** A boolean query parameter (`allow_interpolation=False` by default).
+**Decision (modified):** Not a boolean flag as recommended — an explicit
+`missing_data_policy` parameter with four supported values: `none` (default), `linear`,
+`forward_fill`, `backward_fill`. Every experiment must record which policy was used, for
+reproducibility.
 
 ### Q16 — Historical backfill depth
 **Q:** How far back should the initial historical backfill go?
-**Recommendation:** Pull the maximum history the free APIs allow.
+**Decision (accepted as recommended):** Pull the maximum history the free APIs allow.
 
 ---
 
@@ -141,11 +185,14 @@ de-peg sometimes; collapsing them destroys real information.
 
 ### Q17 — Required V1 feature set and default parameters
 **Q:** Which specific features, with which default parameters, must exist in V1?
-**Recommendation:** EMA(20/50/200), RSI(14), ATR(14), rolling realized volatility.
+**Decision (modified):** Larger set than recommended — Trend: EMA(20/50/200), SMA(20/50).
+Momentum: RSI(14), MACD(12,26,9). Volatility: ATR(14), Bollinger Bands(20,2), rolling realized
+volatility(20). Volume: VWAP. All defaults configurable; every feature version registered in the
+Feature Registry (e.g. `EMA20_v1` → `EMA20_v2` on any implementation/parameter change).
 
 ### Q18 — Feature version numbering scheme
 **Q:** What format should feature version identifiers take?
-**Recommendation:** Plain incrementing integer (`EMA_v1`, `EMA_v2`).
+**Decision (accepted as recommended):** Plain incrementing integer (`EMA20_v1`, `EMA20_v2`).
 
 ---
 
@@ -153,17 +200,25 @@ de-peg sometimes; collapsing them destroys real information.
 
 ### Q19 — Logging mechanism and storage target
 **Q:** Where should logs be persisted, and in what format?
-**Recommendation:** Python's standard `logging` module, structured JSON lines, local rotating log
-files.
+**Decision (accepted as recommended):** Python's standard `logging` module, structured JSON lines,
+local rotating log files.
 
 ### Q20 — Metrics storage/exposure target
 **Q:** Should metrics go into existing System Domain tables, or elsewhere?
-**Recommendation:** Write into `system_events` / `data_quality_reports` tables. No separate metrics
-stack — avoids new infra on a $0 budget.
+**Decision (modified):** System metrics → `system_events`; data-quality metrics →
+`data_quality_reports` (as recommended, no separate metrics stack). Owner added an explicit
+ownership rule: metrics are owned by the service that produces them, the dashboard aggregates
+through service interfaces, and no service may directly access another service's internal
+database. Research/experiment metrics (Sharpe, Sortino, Max Drawdown, CAGR, Profit Factor) belong
+exclusively to experiment records, never duplicated as operational metrics.
 
 ### Q21 — Alert delivery channel
 **Q:** How should alerts reach the project owner in V1?
-**Recommendation:** ERROR/CRITICAL log entries, optionally a simple SMTP email.
+**Decision (modified):** Broader than the recommended "log entries + optional email" — Athena gets
+an **internal dashboard from V1**, growing across versions. V1 dashboard: collector status, DB
+status, active collectors, ingestion rate, API health, missing candles, data-quality overview,
+running experiments, backtest progress, recent logs, CPU/memory/disk. No dedicated metrics stack
+(Prometheus/Grafana/OpenTelemetry) in V1; the dashboard reads from the existing DB and logs.
 
 ---
 
@@ -171,7 +226,8 @@ stack — avoids new infra on a $0 budget.
 
 ### Q22 — Default starting virtual capital
 **Q:** What should the default starting balance be for a new paper trading account?
-**Recommendation:** $10,000, matching the backtest default (Q07) for direct comparability.
+**Decision (accepted as recommended):** $10,000, matching the backtest default (Q07) for direct
+comparability.
 
 ---
 
@@ -185,13 +241,18 @@ No open questions — fully implementable as written.
 
 ### Q23 — "Statistically significant" test/threshold
 **Q:** What statistical method and threshold should Athena use?
-**Recommendation:** Bootstrap resampling on trade returns (or one-sample t-test that mean return >
-0), p < 0.05, minimum 30 trades before any significance claim.
+**Decision (modified):** Bootstrap resampling on trade returns as the V1 default (as recommended),
+95% confidence, p < 0.05, minimum 30 trades — but the minimum trade count is a **reporting
+guideline**, not a hard validation rule, and other methods (e.g. one-sample t-test) may be selected
+per experiment. The chosen method/threshold must always be recorded in experiment metadata.
+Statistical significance alone is never proof of a robust strategy — must be read together with
+out-of-sample performance, walk-forward validation, parameter sensitivity, drawdown, and
+risk-adjusted performance.
 
 ### Q24 — Train/validation/test split ratios
 **Q:** What default split ratios separate training, validation, and out-of-sample test data?
-**Recommendation:** 60/20/20, split chronologically (never shuffled) — preserves the no-lookahead
-rule.
+**Decision (accepted as recommended):** 60/20/20, split chronologically (never shuffled) —
+preserves the no-lookahead rule.
 
 ---
 
@@ -200,18 +261,24 @@ rule.
 ### Q25 — Default numeric risk limits
 **Q:** What are the default limits for max position size, daily loss, drawdown, concurrent
 positions?
-**Recommendation:** Max 10% of equity per position; max 2% daily loss; max 20% drawdown (triggers
-review, not a hard stop); max 5 concurrent positions.
+**Decision (modified):** Max position size 5% of equity (not 10% as recommended, matching Q07's
+5% sizing default) — max 2% daily loss, max 20% drawdown (mandatory review warning; a hard stop is
+optional per experiment), max 5 concurrent positions — those three unchanged from the
+recommendation. All limits configurable per experiment; overrides recorded for reproducibility.
 
 ### Q26 — Leverage/margin trading scope
 **Q:** Is V1 paper trading spot-only, or does it simulate leveraged perpetual futures?
-**Recommendation:** Spot-only for V1. Funding/open-interest data is still collected for research
-features now, but leveraged paper trading is a later phase.
+**Decision (accepted as recommended):** Spot-only for V1. Funding/open-interest data is still
+collected for research features now, but leveraged paper trading is a later phase.
 
 ### Q27 — Kill-switch trigger thresholds
 **Q:** What thresholds should automatically trigger the kill switch?
-**Recommendation:** Daily loss limit breached, OR max drawdown breached, OR 3+ consecutive
-execution failures, OR market data feed stale for >5 minutes.
+**Decision (modified):** Same core triggers as recommended (daily loss / drawdown breach, 3+
+consecutive execution failures, data feed stale >5 minutes), plus two more: database unavailable,
+and a critical data-integrity failure reported by the Data Quality Agent. On trigger: stop opening
+new positions, cancel pending paper orders, keep logging/monitoring running, raise a CRITICAL
+alert, record the full incident. The kill switch applies to Paper Trading only in V1 and never
+terminates Athena itself — data collection and monitoring keep running to support diagnosis.
 
 ---
 
@@ -219,12 +286,16 @@ execution failures, OR market data feed stale for >5 minutes.
 
 ### Q28 — Scheduling paradigm for V1
 **Q:** What scheduling approach should the centralized scheduler use?
-**Recommendation:** In-process (e.g. asyncio loop), not OS-level cron.
+**Decision (accepted as recommended):** In-process (e.g. an asyncio loop), not OS-level cron.
 
 ### Q29 — Repository layout — binding or illustrative?
 **Q:** Is the documented folder layout mandatory, or adaptable?
-**Recommendation:** Illustrative — see [[System Architecture & Repository Layout]]; the real repo
-already diverges slightly and that's fine as long as module responsibilities stay separated.
+**Decision (modified):** Illustrative in naming, but binding in intent — see
+[[System Architecture & Repository Layout]]. Each top-level module is a bounded context that
+should be independently deployable as a future microservice; directory names may evolve as long as
+each module keeps one clear responsibility, module boundaries stay unchanged, and dependencies
+follow the documented architecture (e.g. `backend/data/, feature_factory/, research/, risk/,
+paper_trading/` is acceptable; a catch-all `misc/`/`utils_everything/` is not).
 
 ---
 
@@ -232,11 +303,16 @@ already diverges slightly and that's fine as long as module responsibilities sta
 
 ### Q30 — Test framework
 **Q:** Which Python test framework should be used?
-**Recommendation:** pytest — already in use, see [[Coding Guidelines & Operating Principles]].
+**Decision (accepted as recommended):** pytest — already in use, see
+[[Coding Guidelines & Operating Principles]].
 
 ### Q31 — Coverage target
 **Q:** What minimum coverage percentage counts as "high" for critical modules?
-**Recommendation:** 80% overall, 90%+ for Risk Engine and Portfolio Accounting specifically.
+**Decision (modified):** 80% overall (as recommended), but 95% for critical modules — higher than
+the recommended 90%. Critical modules: Risk Engine, Portfolio Accounting, Order Execution,
+Position Sizing, Performance Metrics. Coverage is a quality indicator, not a goal — tests must
+still be deterministic, meaningful, isolated, and behavior-based; artificial coverage inflation via
+trivial tests is prohibited.
 
 ---
 
@@ -245,34 +321,41 @@ already diverges slightly and that's fine as long as module responsibilities sta
 ### Q32 — Coinbase adapter scope
 **Q:** Should `CoinbaseExchange` implement the full `ExchangeAdapter` interface, or just a minimal
 price-lookup method?
-**Conflict:** `CLAUDE.md` frames Coinbase as "baseline for price comparison"; other docs list it as
-a full market-data source.
-**Recommendation:** Lightweight adapter — price/ticker lookup only, for cross-exchange divergence
-checks. Coinbase spot doesn't have funding rates anyway.
+**Decision (modified):** `CoinbaseExchange` implements the **standard** `ExchangeAdapter`
+interface (not a separate lightweight one) but only for a limited scope: symbol discovery, current
+price, historical OHLCV, ticker info — used for cross-exchange comparison, data validation, and
+market sanity checks. Order execution, paper trading, funding rates, open interest, and private
+endpoints are explicitly out of scope for V1 and must raise `NotSupportedError` rather than a
+placeholder implementation. Not yet built — and the `Exchange` base contract
+([[Exchange Adapter Pattern]]) doesn't yet define a distinct `NotSupportedError` (today's adapters
+only use `NotImplementedError` for temporarily-missing methods), so this convention still needs to
+be added when Coinbase is implemented.
 
 ### Q33 — CryptoPanic/RSS staging
 **Q:** Should CryptoPanic/RSS ingestion be built alongside the exchange/macro adapters now, or
 deferred?
-**Conflict:** `CLAUDE.md`'s Version 1 Data Strategy lists it as in-scope; its own Preferred
-Development Order step 1 omits news sources.
-**Recommendation:** Defer until the core Binance/Bybit/FRED/CoinGecko/Alternative.me pipeline is
-solid.
+**Decision (accepted as recommended):** Defer until the core Binance/Bybit/FRED/CoinGecko/
+Alternative.me pipeline is solid.
 
 ### Q34 — AGENT_PROTOCOL / AI_ARCHITECTURE staging
-**Q:** Confirm these describe eventual step-7 target state only, out of scope until data/
-backtesting/risk/paper-trading are complete.
-**Recommendation:** Confirmed — target-state specs only. Nothing to build now. See
+**Q:** Confirm these describe eventual step-7-equivalent target state only, out of scope until
+data/backtesting/risk/paper-trading are complete.
+**Decision (accepted as recommended):** Confirmed — target-state specs only, describing
+[[Roadmap#Phase 6 — Multi-Agent Research|Phase 6]]. Nothing to build now. See
 [[Long-Term Architecture & Development Order#Preferred development order]].
 
 ---
 
 ## Final decision checklist
 
-- [ ] All "decide now" questions answered by the project owner
-- [ ] V1 scope decisions separated from later/Phase-5+ work
-- [ ] Accepted recommendations copied into actual implementation docs/config
-- [ ] Overrides documented with a short reason
-- [ ] No unresolved blocker remains before the next round of coding
+- [x] All "decide now" questions answered by the project owner, except Q06 (explicitly deferred)
+- [x] V1 scope decisions separated from later/Phase-5+ work
+- [ ] Accepted/modified decisions copied into actual implementation docs — still only living in
+      `docs/answers_obsidian_optimized.md`; see the warning callout at the top of this note
+- [x] Overrides documented with a short reason (see each question's "modified" note above)
+- [ ] No unresolved blocker remains before the next round of coding — Q06 still blocks
+      [[Roadmap#Phase 3 — Backtesting & Experiment Tracking|Phase 3]]; Q13 (symbol convention) and
+      Q32's `NotSupportedError` convention are implemented-decision gaps, not open questions
 
 ## Related
 - [[Roadmap]]
