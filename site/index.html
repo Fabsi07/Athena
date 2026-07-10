@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Athena — Under Construction</title>
+<meta name="description" content="Project Athena: a lean, reproducible quant research platform. Currently under construction.">
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121822;
+    --panel-border: #1f2937;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #4fd1c5;
+    --accent-dim: #2c7a72;
+    --warn: #f0b429;
+    --done: #3fb950;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f8fa;
+      --panel: #ffffff;
+      --panel-border: #d0d7de;
+      --text: #1b1f24;
+      --muted: #57606a;
+      --accent: #0f766e;
+      --accent-dim: #0f766e;
+      --warn: #9a6700;
+      --done: #1a7f37;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0f14; --panel: #121822; --panel-border: #1f2937;
+    --text: #e6edf3; --muted: #8b98a5; --accent: #4fd1c5;
+    --accent-dim: #2c7a72; --warn: #f0b429; --done: #3fb950;
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f8fa; --panel: #ffffff; --panel-border: #d0d7de;
+    --text: #1b1f24; --muted: #57606a; --accent: #0f766e;
+    --accent-dim: #0f766e; --warn: #9a6700; --done: #1a7f37;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .badge::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--warn);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  h1 {
+    font-size: 2.1rem;
+    margin: 1.2rem 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 1.05rem;
+    margin: 0 0 2.5rem;
+    max-width: 60ch;
+  }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  section h2 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+  .goal {
+    font-size: 1.05rem;
+    font-style: italic;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    margin: 0;
+  }
+  ol.phases {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: phase;
+  }
+  ol.phases li {
+    counter-increment: phase;
+    display: flex;
+    gap: 0.9rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--panel-border);
+    align-items: baseline;
+  }
+  ol.phases li:last-child { border-bottom: none; }
+  ol.phases li::before {
+    content: counter(phase, decimal-leading-zero);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    width: 1.6rem;
+  }
+  .phase-name { flex: 1; }
+  .phase-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .status-done { color: var(--done); border: 1px solid var(--done); }
+  .status-active { color: var(--warn); border: 1px solid var(--warn); }
+  .status-pending { color: var(--muted); border: 1px solid var(--panel-border); }
+
+  ul.plain { margin: 0; padding-left: 1.2rem; }
+  ul.plain li { margin-bottom: 0.4rem; }
+
+  footer {
+    margin-top: 2.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="badge">Under Construction</span>
+  <h1>Project Athena</h1>
+  <p class="subtitle">
+    A reproducible quant research platform for discovering and validating systematic
+    trading edges — built on $0 budget, free-tier data, and a local database. Not a
+    trading bot, and not (yet) anything that touches real money.
+  </p>
+
+  <section>
+    <h2>What we want to achieve</h2>
+    <p class="goal">
+      Build a lean, reliable research platform utilizing $0 budget, free-tier data
+      sources, and a local database architecture — that can eventually support
+      AI-assisted and multi-agent research on a distributed stack.
+    </p>
+  </section>
+
+  <section>
+    <h2>Where we are right now</h2>
+    <ol class="phases">
+      <li><span class="phase-name">Project Foundation — governance docs, directory layout, toolchain</span><span class="phase-status status-done">Done</span></li>
+      <li><span class="phase-name">Data Ingestion &amp; Data Quality — Binance &amp; Bybit adapters, TimescaleDB storage</span><span class="phase-status status-active">In Progress</span></li>
+      <li><span class="phase-name">Backtesting Engine ↔ Feature Engineering ↔ Strategy Research</span><span class="phase-status status-pending">Pending</span></li>
+      <li><span class="phase-name">Experiment Tracking</span><span class="phase-status status-pending">Pending</span></li>
+      <li><span class="phase-name">Paper Trading (simulated execution on live data)</span><span class="phase-status status-pending">Pending</span></li>
+      <li><span class="phase-name">AI Research Assistant &amp; Multi-Agent Debate</span><span class="phase-status status-pending">Pending</span></li>
+      <li><span class="phase-name">Live Trading Controls</span><span class="phase-status status-pending">Pending</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Hard constraint</h2>
+    <ul class="plain">
+      <li>No live trades until research, validation, paper trading, risk controls, and human approval are mature.</li>
+      <li>AI assists research — it never sizes positions, places trades, or bypasses risk controls.</li>
+      <li>Every backtest is treated skeptically: lookahead bias, overfitting, and unrealistic fills are assumed until ruled out.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Built in the open. Source at
+    <a href="https://github.com/Fabsi07/Trading" target="_blank" rel="noopener">github.com/Fabsi07/Trading</a>.
+  </footer>
+
+</div>
+</body>
+</html>
